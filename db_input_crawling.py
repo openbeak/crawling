@@ -3,11 +3,11 @@ from bs4 import BeautifulSoup
 from db_setting import con
 
 
-def mainCrawler(proNum , proName, cate, rate):
+def mainCrawler(proNum, proName, cate, rate):
     try:
         with con.cursor() as cursor:
             # Create a new record
-            sql = "INSERT INTO `app_total_problems` (`problemNum`, `problemName`, `category`, `answerRate`) VALUES (%s, %s, %s, %s)"
+            sql = "INSERT INTO `algoreader` (`problemNum`, `problemName`, `category`, `answerRate`) VALUES (%s, %s, %s, %s)"
             cursor.execute(sql, (proNum, proName, cate, rate))
         con.commit()
         print('DB SAVE SUCCESS')
@@ -36,7 +36,7 @@ for c in problem_category:
     cate_length = len(soup.select('.pagination li'))
     print(cate_length)
     for page in range(cate_length):
-        url_cate = requests.get('https://www.acmicpc.net/problem/tag/' + c + "/" + str(page+1))
+        url_cate = requests.get('https://www.acmicpc.net/problem/tag/' + c + "/" + str(page + 1))
         soup = BeautifulSoup(url_cate.content, 'html.parser')
         rows = soup.select('tr')
         if rows:
@@ -47,8 +47,8 @@ for c in problem_category:
                 proName = r.select('td')[1].getText()
                 cate = c
                 rate = r.select('td')[5].getText()
-                print(proNum, proName, cate, rate)
-                mainCrawler(proNum, proName, cate, rate)
-
+                submitCount = int(r.select('td')[0].getText())
+                print(proNum, proName, cate, rate, submitCount)
+                mainCrawler(proNum, proName, cate, rate, submitCount)
 
 con.close()

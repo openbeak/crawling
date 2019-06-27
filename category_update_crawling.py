@@ -3,18 +3,22 @@ from bs4 import BeautifulSoup
 from db_setting import con
 
 
-def mainCrawler(cate, proNum):
+def mainCrawler(mock_data):
     try:
         with con.cursor() as cursor:
             sql = "UPDATE `all_baek` SET category = %s WHERE problemNum = %s"
-            cursor.execute(sql, (cate, proNum))
+            # cursor.execute(sql, (cate, proNum))
+            cursor.executemany(sql, mock_data)
         con.commit()
         print('DB UPDATE SUCCESS')
     except:
         con.rollback()
         print('DB UPDATE FAIL')
 
-# mainCrawler("다이나믹",1000)
+
+# test_db = []
+# test_db.append(("구현", 1000))
+# test_db.append(("구현", 1001))
 
 problem_category = []
 res = requests.get('https://www.acmicpc.net/problem/tags')
@@ -27,6 +31,8 @@ for c in tags:
     name = c.select('td')[0].getText()
     count = c.select('td')[1].getText()
     problem_category.append(name)
+
+test_db = []
 
 for c in problem_category:
     url_cate = requests.get('https://www.acmicpc.net/problem/tag/' + c)
@@ -47,6 +53,9 @@ for c in problem_category:
                 cate = c
                 rate = r.select('td')[5].getText()
                 print(proNum, proName, cate, rate)
-                mainCrawler(cate, proName)
+                test_db.append((cate, proName))
 
+mainCrawler(test_db)
 con.close()
+
+# update crawling 작동이 안된다.

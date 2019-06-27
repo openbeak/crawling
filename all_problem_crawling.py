@@ -7,7 +7,7 @@ def mainCrawler(proNum , proName, cate, rate):
     try:
         with con.cursor() as cursor:
             # Create a new record
-            sql = "INSERT INTO `all_baek` (`problemNum`, `problemName`, `category`, `answerRate`) VALUES (%s, %s, %s, %s)"
+            sql = "INSERT INTO `app_total_problems` (`problemNum`, `problemName`, `category`, `answerRate`) VALUES (%s, %s, %s, %s)"
             cursor.execute(sql, (proNum, proName, cate, rate))
         con.commit()
         print('DB SAVE SUCCESS')
@@ -15,6 +15,24 @@ def mainCrawler(proNum , proName, cate, rate):
         con.rollback()
         print('DB SAVE FAIL')
 
+
+exceptionProNumArray = []
+
+def exceptProNum():
+    try:
+        with con.cursor() as cursor:
+            # Create a new record
+            # sql = "SELECT problemNum FROM algoreader"
+            sql = "SELECT problemNum FROM app_total_problems"
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            for r in rows:
+                exceptionProNumArray.append(r[0])
+    except:
+        con.rollback()
+        print('DB SEA FAIL')
+
+exceptProNum()
 
 for page in range(163):
     url_cate = requests.get("https://www.acmicpc.net/problemset/" + str(page+1))
@@ -25,10 +43,13 @@ for page in range(163):
         pro = {}
         for r in rows:
             proNum = int(r.select('td')[0].getText())
-            proName = r.select('td')[1].getText()
-            cate = 'None'
-            rate = r.select('td')[5].getText()
-            print(proNum, proName, cate, rate)
-            mainCrawler(proNum, proName, cate, rate)
+            if proNum in exceptionProNumArray:
+                exceptionProNumArray.remove(proNum)
+            else:
+                proName = r.select('td')[1].getText()
+                cate = 'None'
+                rate = r.select('td')[5].getText()
+                print(proNum, proName, cate, rate)
+                mainCrawler(proNum, proName, cate, rate)
 
 con.close()
