@@ -7,7 +7,7 @@ def mainCrawler(proNum, proName, cate, rate):
     try:
         with con.cursor() as cursor:
             # Create a new record
-            sql = "INSERT INTO `app_total_problems` (`problemNum`, `problemName`, `category`, `answerRate`) VALUES (%s, %s, %s, %s)"
+            sql = "INSERT INTO `app_algoreader` (`problemNum`, `problemName`, `category`, `answerRate`) VALUES (%s, %s, %s, %s)"
             cursor.execute(sql, (proNum, proName, cate, rate))
         con.commit()
         print('DB SAVE SUCCESS')
@@ -46,9 +46,8 @@ for c in problem_category:
                 proNum = int(r.select('td')[0].getText())
                 proName = r.select('td')[1].getText()
                 cate = c
-                rate = r.select('td')[5].getText()
-                submitCount = int(r.select('td')[0].getText())
-                print(proNum, proName, cate, rate, submitCount)
-                mainCrawler(proNum, proName, cate, rate, submitCount)
+                rate = int(float(r.select('td')[5].getText()[:-1])*100)
+                print(proNum, proName, cate, rate)
+                mainCrawler(proNum, proName, cate, rate)
 
 con.close()

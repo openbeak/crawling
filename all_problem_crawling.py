@@ -3,11 +3,11 @@ from bs4 import BeautifulSoup
 from db_setting import con
 
 
-def mainCrawler(proNum , proName, cate, rate):
+def mainCrawler(proNum, proName, cate, rate):
     try:
         with con.cursor() as cursor:
             # Create a new record
-            sql = "INSERT INTO `app_total_problems` (`problemNum`, `problemName`, `category`, `answerRate`) VALUES (%s, %s, %s, %s)"
+            sql = "INSERT INTO `app_algoreader` (`problemNum`, `problemName`, `category`, `answerRate`) VALUES (%s, %s, %s, %s)"
             cursor.execute(sql, (proNum, proName, cate, rate))
         con.commit()
         print('DB SAVE SUCCESS')
@@ -18,12 +18,13 @@ def mainCrawler(proNum , proName, cate, rate):
 
 exceptionProNumArray = []
 
+
 def exceptProNum():
     try:
         with con.cursor() as cursor:
             # Create a new record
             # sql = "SELECT problemNum FROM algoreader"
-            sql = "SELECT problemNum FROM app_total_problems"
+            sql = "SELECT problemNum FROM app_algoreader"
             cursor.execute(sql)
             rows = cursor.fetchall()
             for r in rows:
@@ -32,10 +33,11 @@ def exceptProNum():
         con.rollback()
         print('DB SEA FAIL')
 
+
 exceptProNum()
 
 for page in range(163):
-    url_cate = requests.get("https://www.acmicpc.net/problemset/" + str(page+1))
+    url_cate = requests.get("https://www.acmicpc.net/problemset/" + str(page + 1))
     soup = BeautifulSoup(url_cate.content, 'html.parser')
     rows = soup.select('tr')
     if rows:
@@ -48,7 +50,7 @@ for page in range(163):
             else:
                 proName = r.select('td')[1].getText()
                 cate = 'None'
-                rate = r.select('td')[5].getText()
+                rate = int(float(r.select('td')[5].getText()[:-1])*100)
                 print(proNum, proName, cate, rate)
                 mainCrawler(proNum, proName, cate, rate)
 
