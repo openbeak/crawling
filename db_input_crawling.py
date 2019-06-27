@@ -1,39 +1,59 @@
 import requests
 from bs4 import BeautifulSoup
-import sys
+from db_setting import con
 
-#
-# reload(sys)
-# sys.setdefaultencoding('utf-8')
 
-problem_num = 1000
+def mainCrawler(proNum , proName, cate, rate):
+    try:
+        with con.cursor() as cursor:
+            # Create a new record
+            sql = "INSERT INTO `app_total_problems` (`problemNum`, `problemName`, `category`, `answerRate`) VALUES (%s, %s, %s, %s)"
+            cursor.execute(sql, (proNum, proName, cate, rate))
+        con.commit()
+        print('DB SAVE SUCCESS')
+    except:
+        con.rollback()
+        print('DB SAVE FAIL')
+
+
+problem_category = []
 
 res = requests.get('https://www.acmicpc.net/problem/tags')
 soup = BeautifulSoup(res.content, 'html.parser')
 
-problem_category = []
-category_count = 0
-over_10_category = 0
-over_40_category = 0
-over_80_category = 0
-
 tags = soup.findAll('tr')
-
 tags.pop(0)
 
 for c in tags:
     name = c.select('td')[0].getText()
     count = c.select('td')[1].getText()
     problem_category.append(name)
-    category_count += 1
-    if int(count) > 10:
-        over_10_category += 1
-    if int(count) > 40:
-        over_40_category += 1
-    if int(count) > 80:
-        over_80_category += 1
 
-print("category_count : " + str(category_count))
-print("category_count_over_10 : " + str(over_10_category))
-print("category_count_over_40 : " + str(over_40_category))
-print("category_count_over_80 : " + str(over_80_category))
+test_db = []
+
+adding = 0
+
+for c in problem_category:
+    url_cate = requests.get('https://www.acmicpc.net/problem/tag/' + c)
+    soup = BeautifulSoup(url_cate.content, 'html.parser')
+    print("cate - " + c)
+    cate_length = len(soup.select('.pagination li'))
+    print(cate_length)
+    for page in range(cate_length):
+        url_cate = requests.get('https://www.acmicpc.net/problem/tag/' + c + "/" + str(page+1))
+        soup = BeautifulSoup(url_cate.content, 'html.parser')
+        rows = soup.select('tr')
+        if rows:
+            rows.pop(0)
+            pro = {}
+            for r in rows:
+                proNum = int(r.select('td')[0].getText())
+                proName = r.select('td')[1].getText()
+                cate = c
+                rate = r.select('td')[5].getText()
+                print(proNum, proName, cate, rate)
+                mainCrawler(proNum, proName, cate, rate)
+                test_db.append(pro)
+
+
+con.close()
