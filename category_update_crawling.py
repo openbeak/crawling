@@ -3,21 +3,20 @@ from bs4 import BeautifulSoup
 from db_setting import con
 
 
-def mainCrawler(proNum , proName, cate, rate):
+def mainCrawler(cate, proNum):
     try:
         with con.cursor() as cursor:
-            # Create a new record
-            sql = "INSERT INTO `app_total_problems` (`problemNum`, `problemName`, `category`, `answerRate`) VALUES (%s, %s, %s, %s)"
-            cursor.execute(sql, (proNum, proName, cate, rate))
+            sql = "UPDATE `all_baek` SET category = %s WHERE problemNum = %s"
+            cursor.execute(sql, (cate, proNum))
         con.commit()
-        print('DB SAVE SUCCESS')
+        print('DB UPDATE SUCCESS')
     except:
         con.rollback()
-        print('DB SAVE FAIL')
+        print('DB UPDATE FAIL')
 
+# mainCrawler("다이나믹",1000)
 
 problem_category = []
-
 res = requests.get('https://www.acmicpc.net/problem/tags')
 soup = BeautifulSoup(res.content, 'html.parser')
 
@@ -36,7 +35,7 @@ for c in problem_category:
     cate_length = len(soup.select('.pagination li'))
     print(cate_length)
     for page in range(cate_length):
-        url_cate = requests.get('https://www.acmicpc.net/problem/tag/' + c + "/" + str(page+1))
+        url_cate = requests.get('https://www.acmicpc.net/problem/tag/' + c + "/" + str(page + 1))
         soup = BeautifulSoup(url_cate.content, 'html.parser')
         rows = soup.select('tr')
         if rows:
@@ -48,7 +47,6 @@ for c in problem_category:
                 cate = c
                 rate = r.select('td')[5].getText()
                 print(proNum, proName, cate, rate)
-                mainCrawler(proNum, proName, cate, rate)
-
+                mainCrawler(cate, proName)
 
 con.close()
