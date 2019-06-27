@@ -7,7 +7,7 @@ def mainCrawler(proNum, proName, cate, rate):
     try:
         with con.cursor() as cursor:
             # Create a new record
-            sql = "INSERT INTO `algoreader` (`problemNum`, `problemName`, `category`, `answerRate`) VALUES (%s, %s, %s, %s)"
+            sql = "INSERT INTO `app_total_problems` (`problemNum`, `problemName`, `category`, `answerRate`) VALUES (%s, %s, %s, %s)"
             cursor.execute(sql, (proNum, proName, cate, rate))
         con.commit()
         print('DB SAVE SUCCESS')
